@@ -37,17 +37,7 @@
                 <h4>POINT：{{ now_point }}</h4>
               </div>
             </div>
-            <div class="col">
-              <div class="selected-now">
-                <div v-if="now_select.length==0">
-
-                </div>
-                <div v-else class="selecting-icon">
-                  <label for="">選択中：</label>
-                  <img :src="require('./assets/'+now_select[0].select+'.svg')" class="pazzle-place-icon">
-                </div>
-              </div>
-            </div>
+            <div class="col"></div>
             <div class="able-move-count col">
               <div class="card count-card">
                 <div class="count-img">
@@ -67,7 +57,7 @@
 
         <!-- キャラの立ち絵とスキルゲージ -->
         <div class="chara-place">
-          <div class="ready" v-if="skill_point>100">
+          <div class="ready" v-if="skill_point>150">
             <div v-if="chara_animation == 'panda-skill-on'">
               <img :class="chara_animation" src="./assets/panda/skillnow.png">
             </div>
@@ -704,7 +694,7 @@ export default {
       // アニメーション終わるのを2秒待つ
       setTimeout(async() => {
         console.log("アニメ終了")
-        skill_point.value = skill_point.value - 100;
+        skill_point.value = skill_point.value - 150;
         chara_skill_animation.value = false
         chara_animation.value = ''
         let panda_count = 0
@@ -857,6 +847,10 @@ export default {
   animation-iteration-count:1;
   img{
     width: 20rem;
+  }
+
+  img:hover{
+    transform: scale(1.1);
   }
 }
 
