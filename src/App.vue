@@ -31,7 +31,6 @@
 
         <!-- 上部ナビバー -->
         <div class="nav-bar">
-
           <div class="row">
             <div class="got-point col">
               <div class="card">
@@ -69,8 +68,12 @@
         <!-- キャラの立ち絵とスキルゲージ -->
         <div class="chara-place">
           <div class="ready" v-if="skill_point>100">
-            <img class="panda-skill-on" src="./assets/panda/skillnow.png" v-if="chara_skill_animation==true">
-            <img src="./assets/panda/ready.png" @click="pandaSkill()" v-else>
+            <div v-if="chara_animation == 'panda-skill-on'">
+              <img :class="chara_animation" src="./assets/panda/skillnow.png">
+            </div>
+            <div v-else>
+              <img src="./assets/panda/ready.png" @click="pandaSkill()">
+            </div>
           </div>
           <div class="not-ready" v-else></div>
         </div>
@@ -139,6 +142,7 @@ export default {
     let game_result = ref()
 
     let chara_skill_animation=ref(false)
+    let chara_animation = ref('')
 
     const selectPuzzle=(vertical, horizontal, selecting)=>{
       if(now_select.value.length==0){
@@ -147,6 +151,8 @@ export default {
         console.log("selecting:", now_select.value)
       }else if(now_select.value.length==1){
         if(now_select.value[0].vertical!=vertical && now_select.value[0].horizontal!=horizontal){
+          cantmoveS.currentTime = 0 
+          cantmoveS.play()
           now_select.value=[]
           puzzle_status.value = [
             ['','','','','','','',''],
@@ -170,6 +176,8 @@ export default {
               setTimeout(() => {
                 puzzle_set.value[now_select.value[1].vertical].splice(now_select.value[1].horizontal, 1, now_select.value[0].select)
                 puzzle_set.value[now_select.value[0].vertical].splice(now_select.value[0].horizontal, 1, now_select.value[1].select)
+                flipS.currentTime = 0 
+                flipS.play()
                 matchSearch()
                 console.log("交換処理完了：", puzzle_set.value)
                 now_select.value=[]
@@ -196,6 +204,8 @@ export default {
                 ['','','','','','','',''],
                 ['','','','','','','','']
               ]
+              cantmoveS.currentTime = 0 
+              cantmoveS.play()
             }
           }else{
             now_select.value=[]
@@ -209,6 +219,8 @@ export default {
               ['','','','','','','',''],
               ['','','','','','','','']
             ]
+            cantmoveS.currentTime = 0 
+            cantmoveS.play()
           }
         }
       }
@@ -288,12 +300,16 @@ export default {
                           if(able_move.value<10){
                             able_move.value+=1
                           }
+                          deleteS.currentTime = 0 
+                          deleteS.play()
                         }else{
                           console.log("横列7揃い")
                           delete_list.value[where].splice(first,7,0,0,0,0,0,0,0)
                           if(able_move.value<10){
                             able_move.value+=1
                           }
+                          deleteS.currentTime = 0 
+                          deleteS.play()
                         }
                       }else{
                         console.log("横列6揃い")
@@ -301,6 +317,8 @@ export default {
                         if(able_move.value<10){
                           able_move.value+=1
                         }
+                        deleteS.currentTime = 0 
+                        deleteS.play()
                       }
                       }else{
                       console.log("横列5揃い")
@@ -308,6 +326,8 @@ export default {
                       if(able_move.value<10){
                         able_move.value+=1
                       }
+                      deleteS.currentTime = 0 
+                      deleteS.play()
                     }
                   }else{
                     console.log("横列4揃い:", first)
@@ -315,6 +335,8 @@ export default {
                     if(able_move.value<10){
                       able_move.value+=1
                     }
+                    deleteS.currentTime = 0 
+                    deleteS.play()
                   }
                 }else{
                   console.log("横列3揃い(消せない)")
@@ -339,12 +361,16 @@ export default {
                           if(able_move.value<10){
                             able_move.value+=1
                           }
+                          deleteS.currentTime = 0 
+                          deleteS.play()
                         }else{
                           console.log("横列7揃い")
                           delete_list.value[where].splice(first,7,0,0,0,0,0,0,0)
                           if(able_move.value<10){
                             able_move.value+=1
                           }
+                          deleteS.currentTime = 0 
+                          deleteS.play()
                         }
                       }else{
                         console.log("横列6揃い")
@@ -352,6 +378,8 @@ export default {
                         if(able_move.value<10){
                           able_move.value+=1
                         }
+                        deleteS.currentTime = 0 
+                        deleteS.play()
                       }
                     }else{
                       console.log("横列5揃い")
@@ -359,6 +387,8 @@ export default {
                       if(able_move.value<10){
                         able_move.value+=1
                       }
+                      deleteS.currentTime = 0 
+                      deleteS.play()
                     }
                   }else{
                     console.log("横列4揃い")
@@ -366,6 +396,8 @@ export default {
                     if(able_move.value<10){
                       able_move.value+=1
                     }
+                    deleteS.currentTime = 0 
+                    deleteS.play()
                   }
                 }else{
                   console.log("横列3揃い(消せない)")
@@ -411,6 +443,8 @@ export default {
                         if(able_move.value<10){
                           able_move.value+=1
                         }
+                        deleteS.currentTime = 0 
+                        deleteS.play()
                       }else{
                         console.log("縦列7揃い")
                         delete_list.value[first][where]=0
@@ -423,6 +457,8 @@ export default {
                         if(able_move.value<10){
                           able_move.value+=1
                         }
+                        deleteS.currentTime = 0 
+                        deleteS.play()
                       }
                     }else{
                       console.log("縦列6揃い")
@@ -435,6 +471,8 @@ export default {
                       if(able_move.value<10){
                         able_move.value+=1
                       }
+                      deleteS.currentTime = 0 
+                      deleteS.play()
                     }
                   }else{
                     console.log("縦列5揃い")
@@ -446,6 +484,8 @@ export default {
                     if(able_move.value<10){
                       able_move.value+=1
                     }
+                    deleteS.currentTime = 0 
+                    deleteS.play()
                   }
                 }else{
                   console.log("縦列4揃い")
@@ -456,6 +496,8 @@ export default {
                   if(able_move.value<10){
                     able_move.value+=1
                   }
+                  deleteS.currentTime = 0 
+                  deleteS.play()
                 }
               }else{
                 console.log("縦列3揃い(消せない)")
@@ -646,11 +688,17 @@ export default {
 
     const pandaSkill=async()=>{
       chara_skill_animation.value = true
-      skill_point.value = skill_point.value - 100;
+      chara_animation.value = 'panda-skill-on' 
+      console.log("アニメ開始")
+      skillS.currentTime = 0 
+      skillS.play()
 
       // アニメーション終わるのを2秒待つ
       setTimeout(async() => {
+        console.log("アニメ終了")
+        skill_point.value = skill_point.value - 100;
         chara_skill_animation.value = false
+        chara_animation.value = ''
         let panda_count = 0
         // パンダの位置と個数を把握
         for(let i=0;i<puzzle_set.value.length;i++){
@@ -662,9 +710,27 @@ export default {
           }
         }
         console.log('変換結果：',delete_list.value,"| パンダ数：", panda_count)
+        skillDeleteS.currentTime = 0 
+        skillDeleteS.play()
         await reMatchSearch()
       }, 2000);
     }
+
+    // 音関連
+    
+    let flip_sound = ref(require('./assets/sound/flip.mp3'))
+    let skill_sound = ref(require('./assets/sound/pop.mp3'))
+    let delete_sound = ref(require('./assets/sound/delete.mp3'))
+    let skill_delete_sound = ref(require('./assets/sound/skilldelete.mp3'))
+    let decide_sound = ref(require('./assets/sound/decide.mp3'))
+    let cantmove_sound = ref(require('./assets/sound/cantmove.mp3'))
+
+    const flipS = new Audio(flip_sound.value);
+    const skillS = new Audio(skill_sound.value);
+    const deleteS = new Audio(delete_sound.value);
+    const skillDeleteS = new Audio(skill_delete_sound.value);
+    const decideS = new Audio(decide_sound.value);
+    const cantmoveS = new Audio(cantmove_sound.value);
 
     onMounted(()=>{
       console.log("読み込み完了")
@@ -683,6 +749,13 @@ export default {
       game_over,
       game_result,
       chara_skill_animation,
+      chara_animation,
+      flip_sound,
+      skill_sound,
+      delete_sound,
+      decide_sound,
+      skill_delete_sound,
+      cantmove_sound,
       selectPuzzle,
       matchSearch,
       reMatchSearch,
@@ -690,7 +763,13 @@ export default {
       addNewPuzzle,
       startGame,
       gameOver,
-      pandaSkill
+      pandaSkill,
+      flipS,
+      skillS,
+      deleteS,
+      decideS,
+      skillDeleteS,
+      cantmoveS
 
     }
   }
@@ -908,7 +987,6 @@ export default {
 
 @keyframes PandaSkill {
   0%{
-    opacity: 1;
     transform: scaleY(1);
   }
   5%{
@@ -946,7 +1024,6 @@ export default {
   100%{
     transform: scale(1);
     transform: scaleY(1);
-    opacity: 0;
   }
 }
 </style>
