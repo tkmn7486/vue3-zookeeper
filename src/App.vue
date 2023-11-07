@@ -2,9 +2,9 @@
   <div id="app">
     <!-- タイトル画面 -->
     <div id="title-view" v-if="now_view == 'title'">
+      <img class="title-logo" src="./assets/title_logo.png">
       <div class="title-bg">
-        <h3>🐼どうぶつケシケシ🦁</h3>
-        <button class="btn btn-lg btn-outline-success" @click="startGame()">すた〜と</button>
+        <img src="./assets/start_btn.png" @click="startGame()">
       </div>
     </div>
 
@@ -624,10 +624,18 @@ export default {
       skill_point.value = 0;
       able_move.value = 5;
       now_view.value = 'game';
+      bgmS.currentTime = 0 
+      bgmS.play()
+      bgmS.loop=true;
     }
 
     const gameOver=()=>{
       game_over.value = true
+      bgmS.pause();
+      bgmS.currentTime = 0;
+
+      gameoverS.currentTime = 0 
+      gameoverS.play()
 
       let rank = ''
       switch(true){
@@ -717,6 +725,9 @@ export default {
     }
 
     // 音関連
+
+    let bgm = ref(require('./assets/sound/bgm.mp3'))
+    const bgmS = new Audio(bgm.value)
     
     let flip_sound = ref(require('./assets/sound/flip.mp3'))
     let skill_sound = ref(require('./assets/sound/pop.mp3'))
@@ -724,6 +735,7 @@ export default {
     let skill_delete_sound = ref(require('./assets/sound/skilldelete.mp3'))
     let decide_sound = ref(require('./assets/sound/decide.mp3'))
     let cantmove_sound = ref(require('./assets/sound/cantmove.mp3'))
+    let gameover_sound = ref(require('./assets/sound/gameover.mp3'))
 
     const flipS = new Audio(flip_sound.value);
     const skillS = new Audio(skill_sound.value);
@@ -731,6 +743,7 @@ export default {
     const skillDeleteS = new Audio(skill_delete_sound.value);
     const decideS = new Audio(decide_sound.value);
     const cantmoveS = new Audio(cantmove_sound.value);
+    const gameoverS = new Audio(gameover_sound.value);
 
     onMounted(()=>{
       console.log("読み込み完了")
@@ -750,12 +763,14 @@ export default {
       game_result,
       chara_skill_animation,
       chara_animation,
+      bgm,
       flip_sound,
       skill_sound,
       delete_sound,
       decide_sound,
       skill_delete_sound,
       cantmove_sound,
+      gameover_sound,
       selectPuzzle,
       matchSearch,
       reMatchSearch,
@@ -764,12 +779,14 @@ export default {
       startGame,
       gameOver,
       pandaSkill,
+      bgmS,
       flipS,
       skillS,
       deleteS,
       decideS,
       skillDeleteS,
-      cantmoveS
+      cantmoveS,
+      gameoverS
 
     }
   }
@@ -812,7 +829,8 @@ export default {
 }
 
 #title-view{
-  background-color: white;
+  background-image: url('./assets/title.png');
+  background-size: cover;
   z-index: 100;
   position: fixed;
   top:0;
@@ -821,15 +839,25 @@ export default {
   height: 100vh;
 }
 
+.title-logo{
+  width: 70vw;
+  position: absolute;
+	left: 50%;
+	top: 50%;
+	transform: translateX(-50%) translateY(-200%);
+}
+
 .title-bg{
   position: absolute;
 	left: 50%;
 	top: 50%;
-	transform: translateX(-50%) translateY(-50%);
-  background-color: rgba(255, 255, 255, 0.892);
+	transform: translateX(-50%) translateY(40%);
   animation-name: AppearTitle;
   animation-duration:1s;
   animation-iteration-count:1;
+  img{
+    width: 20rem;
+  }
 }
 
 .puzzle-table-place{
