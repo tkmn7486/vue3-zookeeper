@@ -1,27 +1,85 @@
 <template>
   <div id="app">
-    <div class="puzzle-place">
-      <div class="nav-bar card">
-        <div class="got-point">
-          <h4>得点：{{ now_point }}</h4>
-        </div>
-        <div class="selected-now">
-          <div v-if="now_select.length==0">
+    <!-- タイトル画面 -->
+    <div id="title-view" v-if="now_view == 'title'">
+      <div class="title-bg">
+        <h3>🐼どうぶつケシケシ🦁</h3>
+        <button class="btn btn-lg btn-outline-success" @click="startGame()">すた〜と</button>
+      </div>
+    </div>
 
-          </div>
-          <div v-else class="selecting-icon">
-            <label for="">選択中：</label>
-            <img :src="require('./assets/'+now_select[0].select+'.png')" class="pazzle-place-icon">
+    <!-- ゲーム画面 -->
+    <div id="pazzle-view" v-else-if="now_view == 'game'">
+      <!-- ゲームオーバー時の画面 -->
+      <div class="game-over-view" v-if="game_over == true">
+        <div class="card">
+          <div class="game-over-active">
+            <div class="gameover-text-box">
+              <h3>獲得ポイント：{{ game_result[0].all_points }}</h3>
+              <h2>ランク：{{ game_result[0].your_rank }}</h2>
+              <br>
+              <div class="title-back-btn">
+                <button class="btn btn-outline-success" @click="game_over=false; now_view = 'title';">タイトルへ戻る</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-      <div class="puzzle-table-place">
-        <table border="1" class="puzzle-table">
-          <tr v-for="r in [0,1,2,3,4,5,6,7]" :key="r.id">
-            <td v-for="i in [0,1,2,3,4,5,6,7]" :key="i.id" @click="selectPuzzle(r, i, puzzle_set[r][i])"><div :class="appear_status[r][i]"><img :class="'pazzle-place-icon '+ puzzle_status[r][i]" :src="require('./assets/'+puzzle_set[r][i]+'.png')"></div></td>
-          </tr>
-        </table>
+
+      <!-- パズル表示場所 -->
+      <div class="puzzle-place">
+
+        <!-- 上部ナビバー -->
+        <div class="nav-bar">
+
+          <div class="row">
+            <div class="got-point col">
+              <div class="card">
+                <h4>POINT：{{ now_point }}</h4>
+              </div>
+            </div>
+            <div class="col">
+              <div class="selected-now">
+                <div v-if="now_select.length==0">
+
+                </div>
+                <div v-else class="selecting-icon">
+                  <label for="">選択中：</label>
+                  <img :src="require('./assets/'+now_select[0].select+'.svg')" class="pazzle-place-icon">
+                </div>
+              </div>
+            </div>
+            <div class="able-move-count col">
+              <div class="card count-card">
+                <div class="count-img">
+                  <img :src="require('./assets/countNumber/'+String(able_move)+'.png')">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="puzzle-table-place">
+          <table border="1" class="puzzle-table">
+            <tr v-for="r in [0,1,2,3,4,5,6,7]" :key="r.id">
+              <td v-for="i in [0,1,2,3,4,5,6,7]" :key="i.id" @click="selectPuzzle(r, i, puzzle_set[r][i])"><div :class="appear_status[r][i]"><img :class="'pazzle-place-icon '+ puzzle_status[r][i]" :src="require('./assets/'+puzzle_set[r][i]+'.svg')"></div></td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- キャラの立ち絵とスキルゲージ -->
+        <div class="chara-place">
+          <div class="ready" v-if="skill_point>100">
+            <img class="panda-skill-on" src="./assets/panda/skillnow.png" v-if="chara_skill_animation==true">
+            <img src="./assets/panda/ready.png" @click="pandaSkill()" v-else>
+          </div>
+          <div class="not-ready" v-else></div>
+        </div>
       </div>
+    </div>
+
+    <div id="error-view" v-else>
+      エラーが発生しました
+      <button class="btn btn-success" @click="now_view='title'">タイトルへ戻る</button>
     </div>
   </div>
 </template>
@@ -31,6 +89,8 @@ import {ref, onMounted} from 'vue'
 export default {
   name: 'App',
   setup(){
+    let now_view = ref('title')
+
     let puzzle_set = ref([
       [(Math.floor( Math.random() * 5 ))+1,(Math.floor( Math.random() * 5 ))+1,(Math.floor( Math.random() * 5 ))+1,(Math.floor( Math.random() * 5 ))+1,(Math.floor( Math.random() * 5 ))+1,(Math.floor( Math.random() * 5 ))+1,(Math.floor( Math.random() * 5 ))+1,(Math.floor( Math.random() * 5 ))+1],
       [(Math.floor( Math.random() * 5 ))+1,(Math.floor( Math.random() * 5 ))+1,(Math.floor( Math.random() * 5 ))+1,(Math.floor( Math.random() * 5 ))+1,(Math.floor( Math.random() * 5 ))+1,(Math.floor( Math.random() * 5 ))+1,(Math.floor( Math.random() * 5 ))+1,(Math.floor( Math.random() * 5 ))+1],
@@ -70,6 +130,16 @@ export default {
 
     let now_point = ref(0)
 
+    let skill_point = ref(0)
+
+    let able_move = ref(5)
+
+    let game_over = ref(false)
+
+    let game_result = ref()
+
+    let chara_skill_animation=ref(false)
+
     const selectPuzzle=(vertical, horizontal, selecting)=>{
       if(now_select.value.length==0){
         now_select.value.push({select:selecting, vertical: vertical, horizontal: horizontal})
@@ -92,12 +162,12 @@ export default {
           if(now_select.value[0].vertical==vertical||now_select.value[0].vertical==vertical+1||now_select.value[0].vertical==vertical-1){
             if(now_select.value[0].horizontal==horizontal||now_select.value[0].horizontal==horizontal+1||now_select.value[0].horizontal==horizontal-1){
 
+              able_move.value-=1
               now_select.value.push({select:selecting, vertical: vertical, horizontal: horizontal})
               // CSSアニメーションを半回転するよう変更
               puzzle_status.value[now_select.value[0].vertical][now_select.value[0].horizontal]='changing'
               puzzle_status.value[now_select.value[1].vertical][now_select.value[1].horizontal]='changing'
               setTimeout(() => {
-
                 puzzle_set.value[now_select.value[1].vertical].splice(now_select.value[1].horizontal, 1, now_select.value[0].select)
                 puzzle_set.value[now_select.value[0].vertical].splice(now_select.value[0].horizontal, 1, now_select.value[1].select)
                 matchSearch()
@@ -192,6 +262,11 @@ export default {
         }
       }
       puzzle_set.value = JSON.parse(JSON.stringify(delete_list.value))
+      
+      if(able_move.value == 0){
+        console.log("gameover")
+        gameOver()
+      }
     }
 
     const detailMatchSearch=(direction,amount,type,where)=>{
@@ -210,21 +285,36 @@ export default {
                         if(first+7<8 &&puzzle_set.value[where][first+7]==type){
                           console.log("横列全揃い")
                           delete_list.value[where]=[0,0,0,0,0,0,0,0]
+                          if(able_move.value<10){
+                            able_move.value+=1
+                          }
                         }else{
                           console.log("横列7揃い")
                           delete_list.value[where].splice(first,7,0,0,0,0,0,0,0)
+                          if(able_move.value<10){
+                            able_move.value+=1
+                          }
                         }
                       }else{
                         console.log("横列6揃い")
                         delete_list.value[where].splice(first,6,0,0,0,0,0,0)
+                        if(able_move.value<10){
+                          able_move.value+=1
+                        }
                       }
                       }else{
                       console.log("横列5揃い")
                       delete_list.value[where].splice(first,5,0,0,0,0,0)
+                      if(able_move.value<10){
+                        able_move.value+=1
+                      }
                     }
                   }else{
                     console.log("横列4揃い:", first)
                     delete_list.value[where].splice(first,4,0,0,0,0)
+                    if(able_move.value<10){
+                      able_move.value+=1
+                    }
                   }
                 }else{
                   console.log("横列3揃い(消せない)")
@@ -246,21 +336,36 @@ export default {
                         if(first+7<8 && puzzle_set.value[where][first+7]==type){
                           console.log("横列全揃い")
                           delete_list.value[where]=[0,0,0,0,0,0]
+                          if(able_move.value<10){
+                            able_move.value+=1
+                          }
                         }else{
                           console.log("横列7揃い")
                           delete_list.value[where].splice(first,7,0,0,0,0,0,0,0)
+                          if(able_move.value<10){
+                            able_move.value+=1
+                          }
                         }
                       }else{
                         console.log("横列6揃い")
                         delete_list.value[where].splice(first,6,0,0,0,0,0,0)
+                        if(able_move.value<10){
+                          able_move.value+=1
+                        }
                       }
                     }else{
                       console.log("横列5揃い")
                       delete_list.value[where].splice(first,5,0,0,0,0,0)
+                      if(able_move.value<10){
+                        able_move.value+=1
+                      }
                     }
                   }else{
-                    console.log("横列4揃い:", first)
+                    console.log("横列4揃い")
                     delete_list.value[where].splice(first,4,0,0,0,0)
+                    if(able_move.value<10){
+                      able_move.value+=1
+                    }
                   }
                 }else{
                   console.log("横列3揃い(消せない)")
@@ -303,6 +408,9 @@ export default {
                         delete_list.value[first+5][where]=0
                         delete_list.value[first+6][where]=0
                         delete_list.value[first+7][where]=0
+                        if(able_move.value<10){
+                          able_move.value+=1
+                        }
                       }else{
                         console.log("縦列7揃い")
                         delete_list.value[first][where]=0
@@ -312,6 +420,9 @@ export default {
                         delete_list.value[first+4][where]=0
                         delete_list.value[first+5][where]=0
                         delete_list.value[first+6][where]=0
+                        if(able_move.value<10){
+                          able_move.value+=1
+                        }
                       }
                     }else{
                       console.log("縦列6揃い")
@@ -321,6 +432,9 @@ export default {
                       delete_list.value[first+3][where]=0
                       delete_list.value[first+4][where]=0
                       delete_list.value[first+5][where]=0
+                      if(able_move.value<10){
+                        able_move.value+=1
+                      }
                     }
                   }else{
                     console.log("縦列5揃い")
@@ -329,6 +443,9 @@ export default {
                     delete_list.value[first+2][where]=0
                     delete_list.value[first+3][where]=0
                     delete_list.value[first+4][where]=0
+                    if(able_move.value<10){
+                      able_move.value+=1
+                    }
                   }
                 }else{
                   console.log("縦列4揃い")
@@ -336,6 +453,9 @@ export default {
                   delete_list.value[first+1][where]=0
                   delete_list.value[first+2][where]=0
                   delete_list.value[first+3][where]=0
+                  if(able_move.value<10){
+                    able_move.value+=1
+                  }
                 }
               }else{
                 console.log("縦列3揃い(消せない)")
@@ -361,6 +481,7 @@ export default {
       console.log("消去数：", delete_amount)
       // ポイント加算処理（消した数×10ポイント）
       now_point.value = now_point.value + (delete_amount*10)
+      skill_point.value = skill_point.value+(delete_amount*10)
 
       // 欠けた箇所の補充処理
       if(delete_amount != 0){
@@ -403,7 +524,7 @@ export default {
         ]
       }, 1000);
       delete_list.value=[]
-      reMatchSearch()
+      await reMatchSearch()
     }
 
     const reMatchSearch=()=>{
@@ -458,25 +579,119 @@ export default {
     const startGame=()=>{
       reMatchSearch()
       now_point.value = 0;
+      skill_point.value = 0;
+      able_move.value = 5;
+      now_view.value = 'game';
+    }
+
+    const gameOver=()=>{
+      game_over.value = true
+
+      let rank = ''
+      switch(true){
+        case 0<=now_point.value && now_point.value<=200:
+          rank = 'E'
+          break;
+
+        case 200<now_point.value && now_point.value<=400:
+          rank = 'D'
+          break;
+
+        case 400<now_point.value && now_point.value<=600:
+          rank = 'C'
+          break;
+
+        case 600<now_point.value && now_point.value<=800:
+          rank = 'B'
+          break;
+
+        case 800<now_point.value && now_point.value<=1000:
+          rank = 'B+'
+          break;
+
+        case 1000<now_point.value && now_point.value<=1200:
+          rank = 'A'
+          break;
+
+        case 1200<now_point.value && now_point.value<=1500:
+          rank = 'A+'
+          break;
+
+        case 1500<now_point.value && now_point.value<=2000:
+          rank = 'A++'
+          break;
+
+        case 2000<now_point.value && now_point.value<=2500:
+          rank = 'S'
+          break;
+
+        case 2500<now_point.value && now_point.value<=3500:
+          rank = 'S+'
+          break;
+  
+        case 3500<now_point.value && now_point.value<=5000:
+          rank = 'S++'
+          break;
+
+        case 5000<now_point.value:
+          rank = 'MASTER'
+          break;
+      }
+
+      game_result.value = [{
+        all_points: now_point.value,
+        your_rank: rank
+      }]
+    }
+
+    const pandaSkill=async()=>{
+      chara_skill_animation.value = true
+      skill_point.value = skill_point.value - 100;
+
+      // アニメーション終わるのを2秒待つ
+      setTimeout(async() => {
+        chara_skill_animation.value = false
+        let panda_count = 0
+        // パンダの位置と個数を把握
+        for(let i=0;i<puzzle_set.value.length;i++){
+          for(let p=0;p<puzzle_set.value[i].length;p++){
+            if(puzzle_set.value[i][p]==5){
+              panda_count+=1
+              puzzle_set.value[i][p]=0
+            }
+          }
+        }
+        console.log('変換結果：',delete_list.value,"| パンダ数：", panda_count)
+        await reMatchSearch()
+      }, 2000);
     }
 
     onMounted(()=>{
-      startGame()
+      console.log("読み込み完了")
     })
 
     return{
+      now_view,
       puzzle_set,
       puzzle_status,
       appear_status,
       now_select,
       delete_list,
       now_point,
+      skill_point,
+      able_move,
+      game_over,
+      game_result,
+      chara_skill_animation,
       selectPuzzle,
       matchSearch,
       reMatchSearch,
       detailMatchSearch,
       addNewPuzzle,
-      startGame
+      startGame,
+      gameOver,
+      pandaSkill
+
     }
   }
 }
@@ -494,7 +709,13 @@ export default {
   height: 100vh;
 }
 
+.puzzle-place{
+  padding: 1rem;
+}
+
 .nav-bar{
+  width: 95%;
+  margin: 0 auto;
   .got-point{
     display: inline-block;
     text-align: left;
@@ -505,6 +726,35 @@ export default {
     height: 70px;;
     text-align: right;
   }
+  
+  .able-move-count{
+    width: 5rem;
+  }
+}
+
+#title-view{
+  background-color: white;
+  z-index: 100;
+  position: fixed;
+  top:0;
+  left:0;
+  width: 100vw;
+  height: 100vh;
+}
+
+.title-bg{
+  position: absolute;
+	left: 50%;
+	top: 50%;
+	transform: translateX(-50%) translateY(-50%);
+  background-color: rgba(255, 255, 255, 0.892);
+  animation-name: AppearTitle;
+  animation-duration:1s;
+  animation-iteration-count:1;
+}
+
+.puzzle-table-place{
+  margin-top: 2rem;
 }
 
 .puzzle-table{
@@ -520,6 +770,26 @@ export default {
 .pazzle-place-icon{
   width: 70px;
 }
+
+.chara-place{
+  img{
+    width: 15%;
+    position: fixed;
+    bottom:0;
+    right:0;
+  }
+}
+
+.count-card{
+  width: 5rem;
+  height: 5rem;
+  margin: 0 0 0 auto;
+  padding: 1rem;
+  img{
+    width: 3rem;
+  }
+}
+
 
 .appear{
   animation-name: AppearNew;
@@ -539,32 +809,81 @@ export default {
   animation-iteration-count:1;
 }
 
+.game-over-view{
+  position: fixed;
+  top:0;
+  left:0;
+  width: 100vw;
+  height: 100vh;
+  .game-over-active{
+    position: fixed;
+    height: 70vh;
+    width: 80vw;
+    left: 50%;
+    top: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    background-color: rgba(255, 255, 255, 0.957);
+    z-index: 2000;
+    .gameover-text-box{
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translateX(-50%) translateY(-50%);
+    }
+  }
+}
+
+.panda-skill-on{
+  animation-name: PandaSkill;
+  animation-duration:2s;
+  animation-iteration-count:1;
+}
+
 /* アニメーション */
+
+@keyframes AppearTitle {
+  0%{
+    opacity: 0;
+  }
+  100%{
+    opacity: 1;
+  }
+}
 
 @keyframes AppearNew {
   0%{
     transform: scale(0);
   }
-  20%{
-    transform: scale(1);
-  }
-  30%{
-    transform:rotate(-30deg); 
-  }
-  40%{
-    transform:rotate(30deg); 
-  }
-  50%{
-    transform:rotate(-30deg); 
-  }
-  60%{
-    transform:rotate(30deg); 
-  }
   100%{
     transform: scale(1);
-    transform:rotate(0); 
   }
 }
+
+
+// @keyframes AppearNew {
+//   0%{
+//     transform: scale(0);
+//   }
+//   20%{
+//     transform: scale(1);
+//   }
+//   30%{
+//     transform:rotate(-30deg); 
+//   }
+//   40%{
+//     transform:rotate(30deg); 
+//   }
+//   50%{
+//     transform:rotate(-30deg); 
+//   }
+//   60%{
+//     transform:rotate(30deg); 
+//   }
+//   100%{
+//     transform: scale(1);
+//     transform:rotate(0); 
+//   }
+// }
 
 @keyframes Selecting {
   0%{
@@ -584,6 +903,50 @@ export default {
   }
   100%{
     transform:rotateY(90deg);
+  }
+}
+
+@keyframes PandaSkill {
+  0%{
+    opacity: 1;
+    transform: scaleY(1);
+  }
+  5%{
+    transform: scaleY(0.7);
+  }
+  10%{
+    transform: scaleY(1);
+  }
+  15%{
+    transform: scaleY(0.7);
+  }
+  20%{
+    transform: scaleY(1);
+  }
+  50%{
+    transform: scaleY(0.5);
+  }
+  70%{
+    transform: scaleY(1.3);
+    transform: scale(1.5);
+  }
+  80%{
+    transform: rotate(10deg);
+  }
+  85%{
+    transform: rotate(-10deg);
+  }
+  90%{
+    transform: rotate(10deg);
+  }
+  95%{
+    transform: rotate(-10deg);
+    opacity: 1;
+  }
+  100%{
+    transform: scale(1);
+    transform: scaleY(1);
+    opacity: 0;
   }
 }
 </style>
