@@ -784,6 +784,10 @@ export default {
 </script>
 
 <style lang="scss">
+*{
+  touch-action: manipulation
+}
+
 #app {
   background-image: url("./assets/background.png");
   background-size: cover;
